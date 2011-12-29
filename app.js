@@ -6,8 +6,9 @@
 var express = require('express')
   , routes = require('./routes')
   , mongoose = require('mongoose')
-  , db = mongoose.connect("mongodb://localhost/nodepad")
-  , Document = require('./models.js').Document(db)
+
+var db = mongoose.connect("mongodb://localhost:27017/nodepad")
+  , document = require('./models.js').Document(db)
 
 var app = module.exports = express.createServer();
 
@@ -22,21 +23,56 @@ app.configure(function(){
   app.use(express.static(__dirname + '/public'));
 });
 
+app.configure('test', function(){
+  app.use(express.logger());
+  app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
+  db = mongoose.connect('mongodb://localhost/nodepad');
+});
+
 app.configure('development', function(){
+  app.use(express.logger());
   app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
 });
 
 app.configure('production', function(){
-  app.use(express.errorHandler()); 
+  app.use(express.logger());
+  app.use(express.errorHandler());
+  db = mongoose.connect('mongodb://mongohqurlgoeshere/nodepad');
 });
 
 // Routes
 
-app.get('/welcome/:name', routes.welcome);
+// define route functions here. These functions are referenced
+// from route definitions below.
+
+var welcome = require('./routes/welcome.js').welcome
+  , list = require('./routes/list.js').list
+  , create = require('./routes/create.js').create
+  , read = require('./routes/read.js').read
+  , update = require('./routes/update.js').update
+  , del = require('./routes/del.js').del
+
+// List
+app.get('/documents.:format?', list);
+
+// Create
+app.post('/documents.:format?', create);
+
+// Read
+app.get('/documents/:id.:format?', read);
+
+// Update
+app.put('/documents/:id.:format?', update);
+
+// Delete
+app.del('/documents/:id.:format?', del);
+
+app.get('/welcome/:name?', welcome);
+
 app.get('/', routes.index);
 
-
-
-app.listen(3000);
-console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
+if(!module.parent){
+	app.listen(3000);
+	console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
+}
 

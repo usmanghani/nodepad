@@ -1,7 +1,6 @@
 var mongoose = require('mongoose')
 var DocumentSchema = new mongoose.Schema({
-	  id: mongoose.Schema.ObjectId
-	, title: { type: String, index: true }
+	  title: { type: String, index: true }
 	, data: String
 	, tags: String
 	, date: Date
